@@ -15,6 +15,9 @@ public enum ResponseCode {
     // 未调用任何方法
     INVOKE_NONE("702", "INVOKE_NONE"),
 
+    // 非法异常
+    ILLEGAL_PARAMS("702", "ILLEGAL_PARAMS"),
+
     // 提示
     HINT("600","PROMPT"),
     // 警告

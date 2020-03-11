@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +40,27 @@ public class AutoInvokedCacheRefrushService implements BaseResultInterface {
      * @return
      * */
     public ResultObj<String> invoke(String key) {
+        if (StringUtils.isBlank(key)) {
+            return fail(ResponseCode.ILLEGAL_PARAMS.getCode(), ResponseCode.ILLEGAL_PARAMS.getDesc());
+        }
+        Set<String> keys = new HashSet<>(1);
+        keys.add(key);
+        ResultObj<String> result = invoke(keys);
+        return result;
+    }
+
+    /**
+     * 根据keys调用被@CacheSync修饰的方法
+     * @param keys keys
+     * @return
+     * */
+    public ResultObj<String> invoke(Set<String> keys) {
+
+        if (CollectionUtils.isEmpty(keys)) {
+            return fail(ResponseCode.ILLEGAL_PARAMS.getCode(), ResponseCode.ILLEGAL_PARAMS.getDesc());
+        }
+
+        Map<String, Integer> keysCountMap = SpringUtil.getKeysCountMap(keys);
 
         boolean invokeOnlyOnce = dataSyncProperties.isInvokeOnlyOnce();
         Map<String, List<Method>> syncAnnoFuncContext = SpringUtil.getSyncAnnoFuncContext();
@@ -52,34 +75,25 @@ public class AutoInvokedCacheRefrushService implements BaseResultInterface {
             for (Method method : methods) {
                 CacheSync annotation = method.getAnnotation(CacheSync.class);
                 String annoKey = annotation.key();
-                if (StringUtils.isNotBlank(annoKey) && annoKey.equals(key)) {
+                if (StringUtils.isNotBlank(annoKey) && keys.contains(annoKey) && (!invokeOnlyOnce || keysCountMap.get(annoKey) == 0)) {
                     try {
                         Object response = method.invoke(SpringUtil.getBean(beanName), method.getParameters());
+                        keysCountMap.put(annoKey, keysCountMap.get(annoKey) + 1);
                         log.info("beanName:[{}], methodName:[{}], key:[{}], method invoke success!, response:[{}]", beanName,
-                                method.getName(), key, response);
+                                method.getName(), annoKey, response);
                     }catch (Exception e) {
                         log.error("beanName:[{}], methodName:[{}], key:[{}], method invoke fail! detail error info:[{}]", beanName,
-                                method.getName(), key, e.getMessage());
+                                method.getName(), annoKey, e.getMessage());
                         // 无论invokeOnlyOnce为何值，只要发生异常，直接返回！
-                        return fail(ResponseCode.INVOKE_FAIL.getCode(), "beanName:" + beanName + ", methodName:" + method.getName() + ", key:" + key + " invoke fail!");
+                        return fail(ResponseCode.INVOKE_FAIL.getCode(), "beanName:" + beanName + ", methodName:" + method.getName() + ", key:" + annoKey + " invoke fail!");
                     }
-                    if (invokeOnlyOnce) {
-                        return success();
-                    }
+//                    if (invokeOnlyOnce) {
+//                        return success();
+//                    }
                 }
             }
         }
         return success();
-    }
-
-    /**
-     * 根据keys调用被@CacheSync修饰的方法
-     * @param keys keys
-     * @return
-     * */
-    public ResultObj<String> invoke(Set<String> keys) {
-
-        return null;
     }
 
 }

@@ -3,6 +3,7 @@ package com.chinamobile.cmsr.datasync.controller;
 import com.chinamobile.cmsr.datasync.common.pojo.ResultObj;
 import com.chinamobile.cmsr.datasync.service.AutoInvokedCacheRefrushService;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
@@ -27,7 +28,7 @@ public class AutoInvokedCacheRefrushController {
     }
 
     @PostMapping("/sync/syncCacheWithKeys")
-    public ResultObj<String> syncCache(Set<String> keys) {
+    public ResultObj<String> syncCache(@RequestBody Set<String> keys) {
         return autoInvokedCacheRefrushService.invoke(keys);
     }
 
