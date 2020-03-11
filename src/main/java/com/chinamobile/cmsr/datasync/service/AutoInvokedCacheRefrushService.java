@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @description:
@@ -69,6 +70,16 @@ public class AutoInvokedCacheRefrushService implements BaseResultInterface {
             }
         }
         return success();
+    }
+
+    /**
+     * 根据keys调用被@CacheSync修饰的方法
+     * @param keys keys
+     * @return
+     * */
+    public ResultObj<String> invoke(Set<String> keys) {
+
+        return null;
     }
 
 }

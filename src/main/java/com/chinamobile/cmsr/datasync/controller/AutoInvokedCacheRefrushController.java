@@ -5,6 +5,8 @@ import com.chinamobile.cmsr.datasync.service.AutoInvokedCacheRefrushService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 /**
  * @description:
  * @author: shenjian
@@ -21,8 +23,12 @@ public class AutoInvokedCacheRefrushController {
 
     @PostMapping("/sync/syncCache")
     public ResultObj<String> syncCache(String key) {
-
         return autoInvokedCacheRefrushService.invoke(key);
+    }
+
+    @PostMapping("/sync/syncCacheWithKeys")
+    public ResultObj<String> syncCache(Set<String> keys) {
+        return autoInvokedCacheRefrushService.invoke(keys);
     }
 
 }
